@@ -6,9 +6,6 @@
 
 using namespace std;
 
-
-
-
 fstream file;
 
 //enumeration for telling the type of data contained
@@ -34,7 +31,6 @@ struct RocketData{
                 data[0] = x, data[1] = y, data[2] = z
             dataType == PRESSURE_HEIGHT
                 data[0] = height
-
     */
     vector <float> values;
 };
@@ -78,14 +74,38 @@ int parseAccelLine(string line, RocketData *data){
   int aZStart = line.find("AZ:") + 3;
   int ts2 = line.find("TS:") + 3;
   int end2 = line.find("}@") + 2;
-  string x2Start = line.substr(aXStart, aYStart - 4 - aXStart);
-  string y2Start = line.substr()
+  string x2String = line.substr(aXStart, aYStart - 4 - aXStart);
+  string y2String = line.substr(aYStart, aZStart - 4- aYStart);
+  string z2String = line.substr(aZStart, ts2 - 4- aZStart);
+  string t2String = line.substr(ts2, end2 - 3- ts2);
+  float ax = atof(x2String.c_str());
+  float ay = atof(y2String.c_str());
+  float az = atof(x2String.c_str());
+  float t_s = atof(t2String.str());
+  data->values.push_back(ax);
+  data->values.push_back(ay);
+  data->values.push_back(az);
+  data->timeStamp = t_s;
+  data->dataType = ACCEL;
+  return 0;
+}
+int parsePALine(string line, RocketData *data){
+  int altStart = line.find("Alt:") + 3;
+  int tsStart = line.find("TS:") = 3;
+  int end = line.find("}@") + 2;
+  string altString = line.substr(altStart, tsStart - 4 - altStart);
+  string tsString = line.substr(tsStart, end - 3 - tsStart);
+  float alt = atof(altString.c_str());
+  float ts = atof(tsString.c_str());
+  data->values.push_back(alt);
+  data->values.push_back(ts);
+  data->dataType = PRESSURE_HEIGHT;
+  return 0;
 }
 
 int parseLine(string line, RocketData *data){
     //parse the data and return a RocketData struct
     //if the data is not legit, return a null
-
     printf("Parsing New Line: %s\n", line.c_str());
     if(line.find("GX") >= 0 && line.find("GX") < line.size()){
       return parseGyroLine(line, data);
@@ -93,6 +113,51 @@ int parseLine(string line, RocketData *data){
     return -1;
 }
 
+int parseOrientLine(string line, RocketData *data){
+  int oXStart = line.find("OX:") + 3;
+  int oYStart = line.find("OY:") + 3;
+  int oZStart = line.find("OZ:") + 3;
+  int tsStart = line.find("TS:") + 3;
+  int end = line.find("}@") + 2;
+  string xString = line.substr(oXStart, oYStart - 4 - oXStart);
+  string yString = line.substr(oYStart, oZStart - 4 - oYStart);
+  string zString = line.substr(oZStart, tsStart - 4 - oZStart);
+  string tString = line.substr(tsStart, end - 3 - tsStart);
+  //printf("xString:%s\n", xString.c_str());
+  float ox = atof(xString.c_str());
+  float oy = atof(yString.c_str());
+  float oz = atof(zString.c_str());
+  long ts = atol(tString.c_str());
+  data->values.push_back(ox);
+  data->values.push_back(oy);
+  data->values.push_back(oz);
+  data->timeStamp = ts;
+  data->dataType = ORIENTATION;
+  return 0;
+}
+
+int parseMagLine(string line, RocketData *data){
+  int mXStart = line.find("MX:") + 3;
+  int mYStart = line.find("MY:") + 3;
+  int mZStart = line.find("MZ:") + 3;
+  int tsStart = line.find("TS:") + 3;
+  int end = line.find("}@") + 2;
+  string xString = line.substr(mXStart, mYStart - 4 - mXStart);
+  string yString = line.substr(mYStart, mZStart - 4 - mYStart);
+  string zString = line.substr(mZStart, tsStart - 4 - mZStart);
+  string tString = line.substr(tsStart, end - 3 - tsStart);
+  //printf("xString:%s\n", xString.c_str());
+  float mx = atof(xString.c_str());
+  float my = atof(yString.c_str());
+  float mz = atof(zString.c_str());
+  long ts = atol(tString.c_str());
+  data->values.push_back(mx);
+  data->values.push_back(my);
+  data->values.push_back(mz);
+  data->timeStamp = ts;
+  data->dataType = MAG;
+  return 0;
+}
 
 RocketData findMaxAltitude(){
 
