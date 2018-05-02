@@ -72,7 +72,15 @@ int parseGyroLine(string line, RocketData *data){
   data->dataType = GYRO;
   return 0;
 }
-
+int parseAccelLine(string line, RocketData *data){
+  int aXStart = line.find("AX:") + 3;
+  int aYStart = line.find("AY:") + 3;
+  int aZStart = line.find("AZ:") + 3;
+  int ts2 = line.find("TS:") + 3;
+  int end2 = line.find("}@") + 2;
+  string x2Start = line.substr(aXStart, aYStart - 4 - aXStart);
+  string y2Start = line.substr()
+}
 
 int parseLine(string line, RocketData *data){
     //parse the data and return a RocketData struct
