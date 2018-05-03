@@ -109,6 +109,7 @@ int parseLine(string line, RocketData *data){
     printf("Parsing New Line: %s\n", line.c_str());
     if(line.find("GX") >= 0 && line.find("GX") < line.size()){
       return parseGyroLine(line, data);
+      return parsePALine(line, data);
     }
     return -1;
 }
@@ -160,7 +161,13 @@ int parseMagLine(string line, RocketData *data){
 }
 
 RocketData findMaxAltitude(){
-
+float maxAlt = 0;
+for(int i = 0; i < flightData.size(); i++){
+  if(flightData[i] > maxAlt){
+    maxAlt = flightData[i];
+  }
+}
+return maxAlt;
 }
 
 RocketData findLaunchTime(){
