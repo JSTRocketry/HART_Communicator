@@ -81,7 +81,7 @@ int parseAccelLine(string line, RocketData *data){
   float ax = atof(x2String.c_str());
   float ay = atof(y2String.c_str());
   float az = atof(x2String.c_str());
-  float t_s = atof(t2String.str());
+  long t_s = atol(t2String.c_str());
   data->values.push_back(ax);
   data->values.push_back(ay);
   data->values.push_back(az);
@@ -89,16 +89,16 @@ int parseAccelLine(string line, RocketData *data){
   data->dataType = ACCEL;
   return 0;
 }
-int parsePALine(string line, RocketData *data){
-  int altStart = line.find("Alt:") + 3;
-  int tsStart = line.find("TS:") = 3;
+int parsePresAltLine(string line, RocketData *data){
+  int altStart = line.find("PA:") + 3;
+  int tsStart = line.find("TS:") + 3;
   int end = line.find("}@") + 2;
   string altString = line.substr(altStart, tsStart - 4 - altStart);
   string tsString = line.substr(tsStart, end - 3 - tsStart);
   float alt = atof(altString.c_str());
-  float ts = atof(tsString.c_str());
+  long ts = atol(tsString.c_str());
   data->values.push_back(alt);
-  data->values.push_back(ts);
+  data->timeStamp = ts;
   data->dataType = PRESSURE_HEIGHT;
   return 0;
 }
@@ -106,10 +106,11 @@ int parsePALine(string line, RocketData *data){
 int parseLine(string line, RocketData *data){
     //parse the data and return a RocketData struct
     //if the data is not legit, return a null
-    printf("Parsing New Line: %s\n", line.c_str());
     if(line.find("GX") >= 0 && line.find("GX") < line.size()){
       return parseGyroLine(line, data);
-      return parsePALine(line, data);
+    }
+    if(line.find("PA") >= 0 && line.find("PA") < line.size()){
+      return parsePresAltLine(line, data);
     }
     return -1;
 }
@@ -161,13 +162,19 @@ int parseMagLine(string line, RocketData *data){
 }
 
 RocketData findMaxAltitude(){
-float maxAlt = 0;
-for(int i = 0; i < flightData.size(); i++){
-  if(flightData[i] > maxAlt){
-    maxAlt = flightData[i];
+  int index = -1;
+  for(int i = 0; i < flightData.size(); i++){
+    if(flightData[i].dataType == PRESSURE_HEIGHT){
+      if(index < 0) index = i; //catch the first PRESSURE_HEIGHT line
+      else{
+        if(flightData[i].values[0] > flightData[index].values[0]){
+          index = i;
+        }
+      }
+    }
   }
-}
-return maxAlt;
+  if(index < -1) return flightData[0];
+  return flightData[index];
 }
 
 RocketData findLaunchTime(){
@@ -203,6 +210,7 @@ int main(int argc, char* argv[]){
     while(file >> currentLine){
         if(parseLine(currentLine, &currentData) >= 0){
           flightData.push_back(currentData);
+          currentData = RocketData();
         }
         else printf("Unrecognized line: %s\n", currentLine.c_str());
     }
@@ -210,6 +218,11 @@ int main(int argc, char* argv[]){
     printf("Parsing complete!\n");
     printf("Generating Report......\n");
     //float maxAltitude =
+    RocketData maxAltitude = findMaxAltitude();
+    if(maxAltitude.dataType != PRESSURE_HEIGHT){
+      printf("No Pressure Height data found!");
+    }
+    else printf("Max Altitude %.2f at time %i\n",maxAltitude.values[0], maxAltitude.timeStamp);
 
     return 0;
 }
