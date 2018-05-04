@@ -46,6 +46,8 @@ int openFile(string fileLoc){
     return 0;
 }
 
+
+
 int parseGyroLine(string line, RocketData *data){
   int gXStart = line.find("GX:") + 3;
   int gYStart = line.find("GY:") + 3;
@@ -68,6 +70,32 @@ int parseGyroLine(string line, RocketData *data){
   data->dataType = GYRO;
   return 0;
 }
+
+int parseLineGeneral(string line, float *toStore, int numToStore, string *checks){
+  int starts[numToStore];
+  for(int i = 0; i < numToStore; i ++){
+    starts[i] = line.find(checks[i]) + checks[i].length();
+    if(starts[i] < 0 || starts[i] > (int)line.length()){
+      printf("Failed to find %s in data line %s", checks[i].c_str(), line.c_str());
+      return -1;
+    }
+  }
+  //int startLine = line.find("@{");
+  int endLine = line.find("}@");
+  string temps[numToStore];
+  for(int i = 0; i < numToStore - 1; i ++){
+    temps[i] = line.substr(starts[i], starts[i + 1] - checks[i+1].length() - starts[i] - 1);
+  }
+  //printf("Last: %d total len %d", starts[numToStore], endLine);
+  temps[numToStore -1] = line.substr(starts[numToStore -1], endLine - starts[numToStore - 1] - 1);
+  //printf("Parsed: ");
+  for(int i = 0; i < numToStore; i ++){
+    toStore[i] = atof(temps[i].c_str());
+    //printf("%s\t", temps[i].c_str());
+  }
+  return 0;
+}
+
 int parseAccelLine(string line, RocketData *data){
   int aXStart = line.find("AX:") + 3;
   int aYStart = line.find("AY:") + 3;
@@ -110,7 +138,16 @@ int parseLine(string line, RocketData *data){
       return parseGyroLine(line, data);
     }
     if(line.find("PA") >= 0 && line.find("PA") < line.size()){
-      return parsePresAltLine(line, data);
+      float storeFloats[2];
+      string stringVals[] = {"PA:","TS:"};
+      parseLineGeneral(line, &storeFloats[0],2,&stringVals[0]);
+      data->dataType = PRESSURE_HEIGHT;
+      for(int i = 0; i < 1; i ++){
+        data->values.push_back(storeFloats[i]);
+      }
+      data->timeStamp = (long)storeFloats[1];
+      return 0;
+      //return parsePresAltLine(line, data);
     }
     return -1;
 }
@@ -163,7 +200,7 @@ int parseMagLine(string line, RocketData *data){
 
 RocketData findMaxAltitude(){
   int index = -1;
-  for(int i = 0; i < flightData.size(); i++){
+  for(int i = 0; i < (int)flightData.size(); i++){
     if(flightData[i].dataType == PRESSURE_HEIGHT){
       if(index < 0) index = i; //catch the first PRESSURE_HEIGHT line
       else{
@@ -212,7 +249,9 @@ int main(int argc, char* argv[]){
           flightData.push_back(currentData);
           currentData = RocketData();
         }
-        else printf("Unrecognized line: %s\n", currentLine.c_str());
+        else {
+          printf("Unrecognized line: %s\n", currentLine.c_str());
+        }
     }
      file.close();
     printf("Parsing complete!\n");
@@ -222,7 +261,7 @@ int main(int argc, char* argv[]){
     if(maxAltitude.dataType != PRESSURE_HEIGHT){
       printf("No Pressure Height data found!");
     }
-    else printf("Max Altitude %.2f at time %i\n",maxAltitude.values[0], maxAltitude.timeStamp);
+    else printf("Max Altitude %.2f at time %d\n",maxAltitude.values[0], maxAltitude.timeStamp);
 
     return 0;
 }
