@@ -1,3 +1,9 @@
+/*
+TODO: add a parsing file that defines the syntax, ie "@{PA:<float>;TS:<long>}@ TYPE:PRESSURE_ALTITDUE
+
+*/
+
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
@@ -18,6 +24,8 @@ enum RocketDataType{
     DISPLACEMENT,
     MAG
 };
+
+vector <vector <string> > dataSyntax;
 
 struct DataTypeSyntax{
   int numDataEntries;
