@@ -3,7 +3,6 @@ TODO: add a parsing file that defines the syntax, ie "@{PA:<float>;TS:<long>}@ T
 
 */
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
