@@ -7,11 +7,14 @@ TODO: add a parsing file that defines the syntax, ie "@{PA:<float>;TS:<long>}@ T
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include <GL/glut.h>
 #include <vector>
-
+#include "OpenGlGraph.h"
 using namespace std;
 
 fstream file;
+
+char title[] = "Rocket Altitude Visual";
 
 //enumeration for telling the type of data contained
 enum RocketDataType{
@@ -80,7 +83,7 @@ int parseLineGeneral(string line){
   int dataTypeIndex = -1;
   for(int i = 0; i < (int)dataLinesToLookFor.size(); i ++){
     //printf("index i %d\n",i);
-    if(line.find(dataLinesToLookFor[i].dataSyntax[0]) >= 0 || line.find(dataLinesToLookFor[i].dataSyntax[0]) < line.length()){
+    if(line.find(dataLinesToLookFor[i].dataSyntax[0]) >= 0 && line.find(dataLinesToLookFor[i].dataSyntax[0]) < line.length()){
       dataTypeIndex = i;
       i = dataLinesToLookFor.size();
     }
@@ -167,6 +170,52 @@ RocketData findMaxAltitude(){
 
 
 
+void initGL() {
+   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+   glEnable(GL_DEPTH_TEST);
+   glDepthFunc(GL_LEQUAL);
+   glEnable(GL_BLEND);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+
+
+OpenGlGraph graph1;
+
+void display() {
+   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+   glTranslatef(0.0f, 0.0f, -.5f);
+   //printf("Showing Graph!");
+   graph1.draw();
+   //printf("Done Showing Graph!");
+   glutSwapBuffers();
+}
+
+string getSegment(string target, string startString, string endString){
+  int start = target.find(startString) + startString.length();
+  int end = target.find(endString, start + 1);
+  return target.substr(start, end - start);
+}
+
+
+/*
+void timer(int value) {
+   glutPostRedisplay();
+   glutTimerFunc(refreshMills, timer, 0);
+}
+*/
+void reshape(GLsizei width, GLsizei height) {
+   if (height == 0) height = 1;
+   GLfloat aspect = (GLfloat)width / (GLfloat)height;
+   glViewport(0, 0, width, height);
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   gluPerspective(45.0f, aspect, 0.1f, 100.0f);
+}
+
+
 int main(int argc, char* argv[]){
     if(argc < 2){
         printf("Usage: ./parser file");
@@ -177,8 +226,12 @@ int main(int argc, char* argv[]){
         return -1;
     }
     printf("File opened! Parsing:\n");
-    string pressureSyntax[2] = {"PA:","TS:"};
+    string pressureSyntax[] = {"PA:","TS:"};
     addDataLineToLookFor(PRESSURE_HEIGHT,2, &pressureSyntax[0]);
+    string orientationSyntax[] = {"OX:","OY:","OZ:","TS:"};
+    addDataLineToLookFor(ORIENTATION,4, &orientationSyntax[0]);
+    string accelSyntax[] = {"AX:","AY:","AZ:","TS:"};
+    addDataLineToLookFor(ACCEL,4, &accelSyntax[0]);
     //printf("Num Entries %d Syntax %s %s\n",dataLinesToLookFor[0].numDataEntries,dataLinesToLookFor[0].dataSyntax[0].c_str(),dataLinesToLookFor[0].dataSyntax[1].c_str());
     string currentLine;
     RocketData currentData;
@@ -200,6 +253,31 @@ int main(int argc, char* argv[]){
       printf("No Pressure Height data found!");
     }
     else printf("Max Altitude %.2f at time %ld\n",maxAltitude.values[0], maxAltitude.timeStamp);
-
+    OpenGlGraphSettings settings;
+    settings.graphTitle = "Altitude";
+    settings.xAxisTag = "Time (sec)";
+    settings.yAxisTag = "Altitude (m)";
+    printf("Settings init");
+    graph1 = OpenGlGraph(settings);
+    for(int i = 0; i < (int)flightData.size(); i ++){
+      if(flightData[i].dataType == PRESSURE_HEIGHT){
+        Point2D point;
+        point.y = flightData[i].values[0];
+        //printf("Height: %f",point.y);
+        point.x = flightData[i].timeStamp;
+        graph1.addDataPoint(point);
+      }
+    }
+     printf("Graph setup done");
+     glutInit(&argc, argv);
+     glutInitDisplayMode(GLUT_DOUBLE);
+     glutInitWindowSize(640, 480);
+     glutInitWindowPosition(50, 50);
+     glutCreateWindow(title);
+     glutDisplayFunc(display);
+     glutReshapeFunc(reshape);
+     initGL();
+     //glutTimerFunc(0, timer, 0);
+     glutMainLoop();
     return 0;
 }
