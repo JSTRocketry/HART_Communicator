@@ -152,6 +152,7 @@ int parseLine(string line, RocketData *data){
     return parseLineGeneral(line);
 }
 
+
 RocketData findMaxAltitude(){
   int index = -1;
   for(int i = 0; i < (int)flightData.size(); i++){
@@ -261,11 +262,13 @@ int main(int argc, char* argv[]){
     graph1 = OpenGlGraph(settings);
     for(int i = 0; i < (int)flightData.size(); i ++){
       if(flightData[i].dataType == PRESSURE_HEIGHT){
-        Point2D point;
-        point.y = flightData[i].values[0];
-        //printf("Height: %f",point.y);
-        point.x = flightData[i].timeStamp;
-        graph1.addDataPoint(point);
+        if(flightData[i].values[0] > -100){
+          Point2D point;
+          point.y = flightData[i].values[0];
+          //printf("Height: %f",point.y);
+          point.x = flightData[i].timeStamp/1000.0;
+          graph1.addDataPoint(point);
+        }
       }
     }
      printf("Graph setup done");
