@@ -42,6 +42,7 @@ public:
   void setDataRange(float minY, float maxX);
   void setDataDomain(float minX, float maxX);
   int addDataPoint(Point2D);
+  vector <Point2D> dataPoints;
   //void
 private:
   void drawString(float x, float y, string line);
@@ -49,7 +50,7 @@ private:
   string truncateFloat(float toTruncate, int numDecimal);
   void drawOutline();
   void drawData(bool connect);
-  vector <Point2D> dataPoints;
+
   OpenGlGraphSettings settings;
 };
 

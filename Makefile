@@ -5,10 +5,10 @@ SRC_DIR =src
 CXX=g++-5
 CXXFLAGS=-std=c++11 -Wall -I$(IDIR)
 LIBS= -lglut -lGL -lGLU -lGLEW -lm
-_DEPS = OpenGlGraph.h
+_DEPS = OpenGlGraph.h SerialCommunication.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = OpenGlGraph.o main.o
+_OBJ = OpenGlGraph.o SerialCommunication.o main.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 
